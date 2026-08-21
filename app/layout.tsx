@@ -4,6 +4,8 @@ import { Montserrat, Open_Sans } from "next/font/google";
 import "./globals.css";
 import { Suspense } from "react";
 import GlobalLoader from "../components/ui/loader";
+import { AuthProvider } from "@/context/AuthContext";
+import { Toaster } from "sonner";
 
 const montserrat = Montserrat({
   subsets: ["latin"],
@@ -37,8 +39,12 @@ export default function RootLayout({
       className={`${montserrat.variable} ${openSans.variable} antialiased`}
     >
       <body>
-        <Suspense fallback={<GlobalLoader />}>{children}</Suspense>
+        <AuthProvider>
+          <Suspense fallback={<GlobalLoader />}>{children}</Suspense>
+          <Toaster position="top-right" richColors />
+        </AuthProvider>
       </body>
     </html>
   );
 }
+
