@@ -35,15 +35,15 @@ export const NAVIGATION_CONFIG: NavSection[] = [
         children: [
           {
             name: "Rincian Data Permohonan Sertifikasi",
-            href: "/dashboard/fr/apl-01/rincian",
+            href: "/dashboard/fr/apl-01#rincian",
           },
           {
             name: "Data Sertifikasi",
-            href: "/dashboard/fr/apl-01/data-sertifikasi",
+            href: "/dashboard/fr/apl-01#data-sertifikasi",
           },
           {
             name: "Bukti Kelengkapan Pemohon",
-            href: "/dashboard/fr/apl-01/bukti-kelengkapan",
+            href: "/dashboard/fr/apl-01#bukti-kelengkapan",
           },
         ],
       },

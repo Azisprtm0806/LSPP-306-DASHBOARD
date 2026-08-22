@@ -34,25 +34,55 @@ function PageBadgeIcon({ active = false }: { active?: boolean }) {
 export function Sidebar({ onItemClick, className = "" }: SidebarProps) {
   const pathname = usePathname();
 
-  // Keep track of open collapsible groups, default FR.APL.01 is open
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
     "FR.APL.01": true,
   });
 
-  // Automatically expand group if current pathname matches any of its children
+  const [activeApl01Section, setActiveApl01Section] = useState<string>("rincian");
+
   useEffect(() => {
     NAVIGATION_CONFIG.forEach((section) => {
       section.items.forEach((item) => {
         if (item.children && item.children.length > 0) {
           const hasActiveChild =
             pathname.startsWith(item.href || "") ||
-            item.children.some((child) => child.href === pathname);
+            item.children.some((child) => child.href.split("#")[0] === pathname);
           if (hasActiveChild) {
             setOpenGroups((prev) => ({ ...prev, [item.name]: true }));
           }
         }
       });
     });
+  }, [pathname]);
+
+  useEffect(() => {
+    if (pathname !== "/dashboard/fr/apl-01") return;
+
+    // Check initial hash
+    if (typeof window !== "undefined" && window.location.hash) {
+      const hash = window.location.hash.replace("#", "");
+      if (hash) setActiveApl01Section(hash);
+    }
+
+    const handleSectionChange = (e: Event) => {
+      const customEvent = e as CustomEvent<string>;
+      if (customEvent.detail) {
+        setActiveApl01Section(customEvent.detail);
+      }
+    };
+
+    const handleHashChange = () => {
+      const hash = window.location.hash.replace("#", "");
+      if (hash) setActiveApl01Section(hash);
+    };
+
+    window.addEventListener("apl01-section-change", handleSectionChange);
+    window.addEventListener("hashchange", handleHashChange);
+
+    return () => {
+      window.removeEventListener("apl01-section-change", handleSectionChange);
+      window.removeEventListener("hashchange", handleHashChange);
+    };
   }, [pathname]);
 
   const toggleGroup = (name: string) => {
@@ -77,9 +107,14 @@ export function Sidebar({ onItemClick, className = "" }: SidebarProps) {
                 const Icon = item.icon;
                 const hasChildren = item.children && item.children.length > 0;
                 const isOpen = !!openGroups[item.name];
-                const isActive = item.href ? isNavItemActive(item.href, pathname) : false;
+                const isActive = item.href
+                  ? isNavItemActive(item.href, pathname)
+                  : false;
                 const isChildActive = hasChildren
-                  ? item.children!.some((child) => child.href === pathname)
+                  ? item.children!.some((child) => {
+                      const cleanHref = child.href.split("#")[0];
+                      return cleanHref === pathname;
+                    })
                   : false;
 
                 if (hasChildren) {
@@ -109,21 +144,36 @@ export function Sidebar({ onItemClick, className = "" }: SidebarProps) {
                         <span className="flex-1">{item.name}</span>
                       </div>
 
-                      {/* Sub-items (Indented) */}
                       {isOpen && (
                         <div className="pl-6 space-y-2 py-1 my-1">
                           {item.children!.map((child: NavSubItem) => {
-                            // Subitem active logic: exact match or default rincian when at root apl-01
+                            const isApl01Child = child.href.startsWith("/dashboard/fr/apl-01#");
+                            const sectionId = isApl01Child ? child.href.split("#")[1] : "";
+                            const isApl01Page = pathname === "/dashboard/fr/apl-01";
+
                             const childActive =
-                              pathname === child.href ||
-                              (pathname === "/dashboard/fr/apl-01" &&
-                                child.href === "/dashboard/fr/apl-01/rincian");
+                              isApl01Child && isApl01Page
+                                ? activeApl01Section === sectionId
+                                : pathname === child.href;
+
+                            const handleSubClick = (e: React.MouseEvent) => {
+                              if (onItemClick) onItemClick();
+                              if (isApl01Child && isApl01Page && sectionId) {
+                                e.preventDefault();
+                                const el = document.getElementById(sectionId);
+                                if (el) {
+                                  el.scrollIntoView({ behavior: "smooth", block: "start" });
+                                  setActiveApl01Section(sectionId);
+                                  window.history.replaceState(null, "", `#${sectionId}`);
+                                }
+                              }
+                            };
 
                             return (
                               <Link
                                 key={child.href}
                                 href={child.href}
-                                onClick={onItemClick}
+                                onClick={handleSubClick}
                                 className={`flex items-start gap-2.5 text-xs py-1 transition-colors ${
                                   childActive
                                     ? "text-[#5A7A22] font-bold"
@@ -133,7 +183,9 @@ export function Sidebar({ onItemClick, className = "" }: SidebarProps) {
                                 <span className="mt-0.5">
                                   <PageBadgeIcon active={childActive} />
                                 </span>
-                                <span className="leading-snug">{child.name}</span>
+                                <span className="leading-snug">
+                                  {child.name}
+                                </span>
                               </Link>
                             );
                           })}
@@ -143,7 +195,6 @@ export function Sidebar({ onItemClick, className = "" }: SidebarProps) {
                   );
                 }
 
-                // Standard Single Menu Item
                 return (
                   <Link
                     key={item.name}
@@ -160,7 +211,9 @@ export function Sidebar({ onItemClick, className = "" }: SidebarProps) {
                     ) : Icon ? (
                       <Icon
                         size={16}
-                        className={isActive ? "text-[#8AA53C]" : "text-gray-400"}
+                        className={
+                          isActive ? "text-[#8AA53C]" : "text-gray-400"
+                        }
                       />
                     ) : null}
                     <span className="truncate">{item.name}</span>

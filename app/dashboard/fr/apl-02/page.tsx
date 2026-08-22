@@ -1,487 +1,924 @@
 "use client";
 
 import { useState } from "react";
-import {
-  FileCheck2,
-  Info,
-  Save,
-  Send,
-  Printer,
-  CheckCircle2,
-  ChevronDown,
-  ChevronUp,
-} from "lucide-react";
+import { Check, Pencil, Save, Plus, X } from "lucide-react";
 
-interface KUKItem {
+const inputClass =
+  "w-full px-3.5 py-2.5 text-sm text-gray-800 bg-white rounded-xl border border-gray-300 focus:border-[#7E9631] focus:outline-none focus:ring-2 focus:ring-[#7E9631]/20 transition-all disabled:bg-gray-50 disabled:text-gray-400";
+
+const textareaClass =
+  "w-full min-h-[88px] p-3 text-sm text-gray-800 bg-white rounded-xl border border-gray-300 focus:border-[#7E9631] focus:outline-none focus:ring-2 focus:ring-[#7E9631]/20 resize-none transition-all disabled:bg-gray-50 disabled:text-gray-400";
+
+interface PertanyaanItem {
   id: string;
-  nomor: string;
-  pernyataan: string;
-  status: "K" | "BK" | null;
+  dapatkahSaya: string;
+  statusK: boolean;
+  statusBK: boolean;
   bukti: string;
-}
-
-interface ElemenItem {
-  nomor: string;
-  judul: string;
-  kuks: KUKItem[];
+  kriteriaUnjukKerja: string[];
 }
 
 interface UnitItem {
-  kode: string;
-  judul: string;
-  standar: string;
-  elemens: ElemenItem[];
+  id: string;
+  kodeUnit: string;
+  judulUnit: string;
+  pertanyaans: PertanyaanItem[];
 }
+
+const INSTRUKSI = [
+  "Baca setiap pertanyaan di kolom sebelah kiri",
+  "Beri tanda centang (\u221a) pada kotak jika Anda yakin dapat melakukan tugas yang dijelaskan.",
+  "Isi kolom di sebelah kanan dengan menuliskan bukti yang relevan anda miliki untuk menunjukkan bahwa anda melakukan pekerjaan.",
+];
 
 const INITIAL_UNITS: UnitItem[] = [
   {
-    kode: "PAR.HT02.001.01",
-    judul: "Berkomunikasi Secara Efektif di Lingkungan Kerja Pariwisata",
-    standar: "SKKNI No. 145/2018",
-    elemens: [
+    id: "unit-1",
+    kodeUnit: "I.55HDR00.217.2",
+    judulUnit:
+      "Berkomunikasi Secara Lisan Dalam Bahasa Inggris pada Tingkat Operasional Dasar",
+    pertanyaans: [
       {
-        nomor: "1",
-        judul: "Berkomunikasi di tempat kerja",
-        kuks: [
-          {
-            id: "1.1",
-            nomor: "1.1",
-            pernyataan:
-              "Komunikasi dilakukan secara terbuka, profesional, dan ramah tamah kepada seluruh tamu dan kolega kerja.",
-            status: "K",
-            bukti: "Logbook Layanan Tamu & Penilaian Supervisor",
-          },
-          {
-            id: "1.2",
-            nomor: "1.2",
-            pernyataan:
-              "Bahasa tubuh, nada bicara, dan etika komunikasi diterapkan secara konsisten dalam situasi kerja.",
-            status: "K",
-            bukti: "SOP Grooming & Communication Handbook",
-          },
+        id: "u1-1",
+        dapatkahSaya:
+          "Berkomunikasi dengan pelanggan dan kolega mengenai hal-hal yang berkaitan dengan kegiatan dasar dan sehari-hari ditempat kerja serta kegiatan pelayanan pelanggan.",
+        statusK: false,
+        statusBK: false,
+        bukti: "",
+        kriteriaUnjukKerja: [
+          "Istilah, ungkapan, dan bahasa tubuh untuk memperjelas komunikasi secara lisan dilakukan",
+          "Mengerti dan menggunakan kalimat yang sopan dan ramah serta mengetahui kapan harus memakai kalimat resmi atau tidak resmi",
         ],
       },
       {
-        nomor: "2",
-        judul: "Menangani keluhan pelanggan (customer complaint)",
-        kuks: [
-          {
-            id: "2.1",
-            nomor: "2.1",
-            pernyataan:
-              "Keluhan tamu diterima dengan penuh perhatian dan empati sesuai prosedur standar hotel.",
-            status: "K",
-            bukti: "Laporan Penanganan Keluhan Tamu (Complaint Report)",
-          },
+        id: "u1-2",
+        dapatkahSaya: "Berbicara melalui telepon",
+        statusK: false,
+        statusBK: false,
+        bukti: "",
+        kriteriaUnjukKerja: [
+          "Salam diberikan dengan benar termasuk menyebutkan nama perusahaan",
+          "Bantuan dan menentukan tujuan telepon ditawarkan",
+          "Penelepon diminta untuk menunggu ketika mencari orang yang dikehendaki.",
+          "Apabila diperlukan, meminta maaf kepada penelepon ketika orang yang dikehendaki tidak berada di tempat",
+          "Data penelepon di catat",
         ],
       },
     ],
   },
   {
-    kode: "PAR.HT02.002.01",
-    judul: "Menerapkan Prosedur Kesehatan, Keselamatan dan Keamanan Kerja (K3)",
-    standar: "SKKNI No. 145/2018",
-    elemens: [
+    id: "unit-2",
+    kodeUnit: "I.55HDR00.149.2",
+    judulUnit: "Melakukan Kerjasama Dengan Kolega dan Pelanggan",
+    pertanyaans: [
       {
-        nomor: "1",
-        judul: "Mengikuti prosedur keselamatan dan kesehatan kerja di area hotel",
-        kuks: [
-          {
-            id: "3.1",
-            nomor: "1.1",
-            pernyataan:
-              "Standar dan rambu K3 dipatuhi di seluruh area operasional front office sesuai regulasi keselamatan kerja.",
-            status: "K",
-            bukti: "Sertifikat Pelatihan K3 Perhotelan",
-          },
-          {
-            id: "3.2",
-            nomor: "1.2",
-            pernyataan:
-              "Prosedur tanggap darurat (evakuasi, kebakaran, P3K) dipahami dan siap diimplementasikan.",
-            status: "K",
-            bukti: "Sertifikat Simulasi Fire Drill & Emergency Response",
-          },
+        id: "u2-1",
+        dapatkahSaya: "Melakukan komunikasi di tempat kerja",
+        statusK: false,
+        statusBK: false,
+        bukti: "",
+        kriteriaUnjukKerja: [
+          "Komunikasi dengan tamu dan kolega dilaksanakan secara terbuka, profesional, ramah dan sopan.",
+          "Gunakan bahasa dan nada yang cocok.",
+          "Efek bahasa tubuh personal dipertimbangkan.",
+          "Kepekaan terhadap perbedaan budaya dan sosial diperlihatkan",
+          "Mendengar dan melontarkan pertanyaan secara aktif digunakan untuk memastikan komunikasi dua arah yang efektif",
+          "Konflik yang ada dan potensial diidentifikasi dan solusi dicari dengan bantuan dari kolega bila dibutuhkan.",
+        ],
+      },
+      {
+        id: "u2-2",
+        dapatkahSaya: "Memberikan bantuan untuk tamu internal dan eksternal",
+        statusK: false,
+        statusBK: false,
+        bukti: "",
+        kriteriaUnjukKerja: [
+          "Kebutuhan dan harapan tamu, termasuk hal-hal dengan kebutuhan tertentu, diidentifikasi secara benar yang mencakup produk dan layanan yang tepat diberikan.",
+          "Karyawan berkomunikasi dengan tamu dan dilayani dengan ramah dan sopan.",
+          "Seluruh kebutuhan dan permintaan pelanggan dipenuhi dalam jangka waktu yang cepat sesuai prosedur perusahaan.",
+          "Kesempatan untuk meningkatkan kualitas layanan diidentifikasi dan diambil bila memungkinkan.",
+          "Kekecewaan pelanggan cepat dikenali dan mengambil tindakan untuk memecahkan masalahnya sesuai dengan Tingkat tanggung jawab individu dan prosedur perusahaan.",
+          "Keluhan pelanggan ditangani secara positif, sensitif dan sopan.",
+          "Keluhan ditangani oleh orang yang tepat untuk ditindak lanjuti sesuai dengan (di skkni nya ke potong)",
+        ],
+      },
+      {
+        id: "u2-3",
+        dapatkahSaya: "Menjaga standar kinerja presentasi personal",
+        statusK: false,
+        statusBK: false,
+        bukti: "",
+        kriteriaUnjukKerja: [
+          "Standar kinerja tinggi digunakan untuk dapat melakukan pekerjaan yang berkaitan dengan kolega serta pelanggan",
+          "Penggunaan standar kinerja diterapkan pada saat melakukan pekerjaan di tempat kerja serta mempertimbangkan kriteria lainnnya sesuai peraturan perusahaan",
+          "Masalah kebersihan, kesehatan dan keselamatan.",
+          "Persyaratan presentasi khusus untuk fungsi kerja khusus.",
+          "Perawatan kebersihan personil yang sesuai dengan standar perusahaan.",
+          "Pakaian yang pantas.",
+        ],
+      },
+      {
+        id: "u2-4",
+        dapatkahSaya: "Melakukan kerja dalam tim",
+        statusK: false,
+        statusBK: false,
+        bukti: "",
+        kriteriaUnjukKerja: [
+          "Kepercayaan, dukungan dan hormat diperlihatkan kepada anggota tim dalam aktifitas sehari-hari.",
+          "Perbedaan budaya dalam tim diakomodir.",
+          "Tujuan kerja tim secara Bersama diidentifikasi.",
+          "Tanggung jawab individu dan tugas-tugas diidentifikasi, diprioritaskan serta diselesaikan dalam kurun waktu yang ditentukan.",
+          "Meminta bantuan dari anggota tim yang lain bila dibutuhkan.",
+          "Bantuan ditawarkan pada kolega untuk memastikan tujuan kerja yang ditentukan terpenuhi.",
+          "Umpan balik dan informasi dari anggota tim lain diterima.",
+          "Perubahan tanggung jawab dari masing-masing individu diperhatikan, yang nantinya harus dibicarakan Kembali tujuan kerja tim.",
+        ],
+      },
+    ],
+  },
+  {
+    id: "unit-3",
+    kodeUnit: "I.55HDR00.150.2",
+    judulUnit: "Melakukan Kerja Dalam Lingkungan Sosial yang Beragam",
+    pertanyaans: [
+      {
+        id: "u3-1",
+        dapatkahSaya:
+          "Melakukan komunikasi dengan pelanggan dan kolega dari latar belakang yang beragam",
+        statusK: false,
+        statusBK: false,
+        bukti: "",
+        kriteriaUnjukKerja: [
+          "Pelanggan dan kolega dari seluruh kelompok budaya dinilai dan diperlakukan dengan hormat dan kepekaan.",
+          "Komunikasi lisan dan non-lisan mempertimbangkan perbedaan budaya.",
+          "Dimana ada hambatan bahasa, usaha-usaha dilakukan untuk berkomunikasi dengan bahasa isyarat atau kata-kata sederhana dalam bahasa orang tersebut.",
+          "Bantuan dari kolega, buku-buku referensi atau organisasi luar diperoleh ketika dibutuhkan.",
+        ],
+      },
+      {
+        id: "u3-2",
+        dapatkahSaya: "Menangani kesalah pahaman antar budaya",
+        statusK: false,
+        statusBK: false,
+        bukti: "",
+        kriteriaUnjukKerja: [
+          "Hal-hal yang dapat menimbulkan kesalah pahaman di tempat kerja haru diidentifikasi.",
+          "Kesulitan-kesulitan disampaikan pada orang yang tepat dan bantuan dicari dari ketua tim.",
+          "Ketika kesulitan atau kesalah pahaman terjadi, kemungkinan perbedaan budaya harus dipertimbangkan.",
+          "Usaha-usaha dilakukan untuk memecahkan masalah kesalah pahaman, dengan pertimbangan budaya.",
+          "Hal-hal dan masalah diajukan pada ketua tim /penyelia yang tepat untuk tindak lanjut.",
+        ],
+      },
+    ],
+  },
+  {
+    id: "unit-4",
+    kodeUnit: "N.82MIC00.074.2",
+    judulUnit: "Mencari dan Memberikan Informasi",
+    pertanyaans: [
+      {
+        id: "u4-1",
+        dapatkahSaya:
+          "Melakukan komunikasi dengan pelanggan dan kolega dari latar belakang yang beragam",
+        statusK: false,
+        statusBK: false,
+        bukti: "",
+        kriteriaUnjukKerja: [
+          "Sumber informasi yang ada dicari tahu sesuai dengan informasi yang akan dicari.",
+          "Sumber informasi didapatkan dan diteliti keabsahannya sesuai dengan kebutuhan.",
+          "Informasi didapatkan sesuai dengan jadwal yang telah ditetapkan.",
+        ],
+      },
+      {
+        id: "u4-2",
+        dapatkahSaya: "Mempersiapkan dan memberikan informasi",
+        statusK: false,
+        statusBK: false,
+        bukti: "",
+        kriteriaUnjukKerja: [
+          "Informasi diteliti dan dipilih isi sesuai dengan kebutuhan tertentu.",
+          "Konsep penulisan dibuat sesuai dengan kebutuhan.",
+          "Informasi dijelaskan dengan jelas, tepat, dan akurat sesuai dengan kebutuhan.",
+          "Informasi diberikan sesuai dengan pedoman perusahaan dan bentuk yang sesuai dengan kondisi dan peserta.",
+          "Informasi disampaikan kepada orang yang tepat pada waktu yang telah ditentukan sesuai kebutuhan.",
+        ],
+      },
+    ],
+  },
+  {
+    id: "unit-5",
+    kodeUnit: "N.82MIC00.087.3",
+    judulUnit: "Mengikuti Aturan Keprotokolan",
+    pertanyaans: [
+      {
+        id: "u5-1",
+        dapatkahSaya:
+          "Mengidentifikasi kategori tamu atau delegasi yang akan datang",
+        statusK: false,
+        statusBK: false,
+        bukti: "",
+        kriteriaUnjukKerja: [
+          "Daftar tamu kegiatan disusun berdasarkan tamu yang diundang.",
+          "Profil tamu diidentifikasi sesuai kebijakan perusahaan.",
+          "Logistik kebutuhan tamu diidentifikasi sesuai kebutuhan kegiatan",
+        ],
+      },
+      {
+        id: "u5-2",
+        dapatkahSaya:
+          "Merencanakan rangkaian kegiatan kenegaraan atau kegiatan resmi secara detail",
+        statusK: false,
+        statusBK: false,
+        bukti: "",
+        kriteriaUnjukKerja: [
+          "Kebutuhan dan kebiasaan tamu diidentifikasi berdasarkan kebijakan perusahaan.",
+          "Susunan rincian acara dibuat sesuai dengan kebutuhan tamu.",
+          "Susunan rincian acara dianalisis sesuai kebutuhan.",
+          "Susunan rincian acara dikembangkan sesuai kebutuhan.",
+          "Susunan rincian acara dikoordinasikan dengan semua pihak terkait.",
+        ],
+      },
+      {
+        id: "u5-3",
+        dapatkahSaya: "Menetapkan rangkaian susunan kegiatan",
+        statusK: false,
+        statusBK: false,
+        bukti: "",
+        kriteriaUnjukKerja: [
+          "Susunan kegiatan dibuat sesuai dengan rencana.",
+          "Susunan kegiatan ditetapkan sesuai dengan kesepakatan.",
+          "Gladi kotor dan gladi bersih dilakukan bersama semua pihak yang terkait sesuai dengan kebutuhan.",
+        ],
+      },
+      {
+        id: "u5-4",
+        dapatkahSaya:
+          "Menjelaskan tentang Keseluruhan rangkaian kegiatan dan layanan secara rinci",
+        statusK: false,
+        statusBK: false,
+        bukti: "",
+        kriteriaUnjukKerja: [
+          "Lokasi penyelenggaraan, jadwal kegiatan, fasilitas, dan informasi umum lainnya dijelaskan dalam rangkaian kegiatan secara keseluruhan.",
+          "Ketersediaan layanan dan logistic disampaikan secara lisan maupun tulisan dalam bentuk buku panduan sesuai prosedur.",
+        ],
+      },
+    ],
+  },
+  {
+    id: "unit-6",
+    kodeUnit: "I.55HDR00.224.2",
+    judulUnit:
+      "Menulis Dalam Bahasa Inggris pada Tingkat Penyeliaan dan Operasional Menengah",
+    pertanyaans: [
+      {
+        id: "u6-1",
+        dapatkahSaya: "Menulis dokumen rutin dan tidak rutin di tempat kerja",
+        statusK: false,
+        statusBK: false,
+        bukti: "",
+        kriteriaUnjukKerja: [
+          "Pembaca dan tujuan dari teks diidentifikasi",
+          "Dokumen yang tepat dipilih untuk dipersiapkan",
+          "Ide dikembangkan secara mendalam untuk memenuhi kebutuhan konteks khusus",
+          "Bahasa yang sesuai digunakan untuk memenuhi persyaratan ditempat kerja dan/atau situasi",
+          "Tata cara, sosial, dan budaya diamati yang berkaitan dengan penulisan dokumen di tempat kerja",
+          "Kaidah ejaan, tanda baca, dan tata Bahasa (Kepotong di skkni)",
+        ],
+      },
+      {
+        id: "u6-2",
+        dapatkahSaya: "Menulis petunjuk dan instruksi rutin dan tidak rutin",
+        statusK: false,
+        statusBK: false,
+        bukti: "",
+        kriteriaUnjukKerja: [
+          "Pembaca dan tujuan dari teks diidentifikasi",
+          "Kata kunci, ungkapan, dan kalimat sederhana digunakan dalam menyampaikan suatu pengertian",
+          "Instruksi dan/atau petunjuk diurut dengan benar",
+          "Kaidah ejaan, tanda baca dan tata Bahasa yang umum diikuti dalam bisnis",
+          "Komunikasi tertulis didukung dengan informasi visual seperti tanda-tanda, peta, diagram, dan tabel apabila diperlukan",
+        ],
+      },
+      {
+        id: "u6-3",
+        dapatkahSaya: "Menulis laporan singkat",
+        statusK: false,
+        statusBK: false,
+        bukti: "",
+        kriteriaUnjukKerja: [
+          "Tujuan dan pembaca teks diidentifikasi",
+          "Dokumen yang tepat dipilih untuk dipersiapkan",
+          "Ide-ide secara logis diurut dan disusun untuk memenuhi tujuan",
+          "Kalimat diurut dengan cara yang tepat",
+          "Tata cara konvensional standar digunakan seperti penulisan alenia, penggunaan tanda titik, dan subjudul",
+          "Informasi disampaikan secara objektif",
+          "Kaidah ejaan, tanda baca, dan tata Bahasa yang umum diikuti untuk pembuatan dokumen",
+        ],
+      },
+    ],
+  },
+  {
+    id: "unit-7",
+    kodeUnit: "I.55HDR00.224.2",
+    judulUnit: "Memproses dan Memantau Pendaftaran Kegiatan",
+    pertanyaans: [
+      {
+        id: "u7-1",
+        dapatkahSaya: "Memproses pendaftaran",
+        statusK: false,
+        statusBK: false,
+        bukti: "",
+        kriteriaUnjukKerja: [
+          "Pendaftaran acara ditafsirkan dan diproses secara akurat sesuai dengan prosedur organisasi dan jadwal.",
+          "Informasi pelanggan diidentifikasi, dikumpulkan, dan diproses sesuai tenggat waktu.",
+          "Penawaran untuk pendaftaran tidak disediakan termasuk pilihan daftar tunggu sesuai ketentuan.",
+          "Pertanyaan dijawab tentang biaya dan detail acara lainnya sesuai dengan prosedur.",
+          "Rekam rincian pelanggan digunakan dengan sistem dan teknologi yang tepat guna sesuai dengan perkembangan zaman.",
+          "Berkas pendaftaran acara dievaluasi sesuai dengan sistem atau persyaratan prosedural.",
+        ],
+      },
+      {
+        id: "u7-2",
+        dapatkahSaya: "Memperbaharui pendaftaran",
+        statusK: false,
+        statusBK: false,
+        bukti: "",
+        kriteriaUnjukKerja: [
+          "Status keuangan diperbaharui dari pendaftaran yang akurat sesuai spesifikasi.",
+          "Setiap permintaan pelanggan diterima, diproses, dan direkam untuk perubahan atau pembatalan sesuai kesepakatan para pihak.",
+          "Pemahaman dari rincian perubahan atau pembatalan kondisi dan biaya diberikan dan dikonfirmasi kepada pelanggan sesuai prosedur.",
+        ],
+      },
+      {
+        id: "u7-3",
+        dapatkahSaya: "Memantau dan menghasilkan laporan pendaftaran",
+        statusK: false,
+        statusBK: false,
+        bukti: "",
+        kriteriaUnjukKerja: [
+          "Laporan pendaftaran personel yang relevan dipantau dan dihasilkan sesuai dengan kebutuhan.",
+          "Masalah yang muncul diidentifikasi dan dilaporkan secara proaktif dari informasi kehadiran sesuai prosedur.",
+          "Tindakan diambil untuk mengatasi masalah kehadiran sesuai dengan tanggung jawab individu dan prosedur organisasi.",
+        ],
+      },
+      {
+        id: "u7-4",
+        dapatkahSaya: "Menghasilkan Dokumentasi pendaftaran akhir",
+        statusK: false,
+        statusBK: false,
+        bukti: "",
+        kriteriaUnjukKerja: [
+          "Rincian pendaftaran acara diperiksa dan diselesaikan dalam waktu yang telah ditentukan sesuai ketentuan.",
+          "Dokumen pelanggan disiapkan dan diterbitkan dalam waktu yang telah ditentukan sesuai kebutuhan.",
+          "Semua dokumentasi diperiksa untuk akurasi sebelum diterbitkan dan dirubah seperlunya.",
+          "Laporan pendaftaran akhir dihasilkan dan didistribusikan dalam format dan gaya sesuai dengan persetujuan prosedur dan jadwal.",
+          "Penggunaan bahan cetak diminimalkan dan dimaksimalkan sesuai dengan transmisi elektronik dari semua dokumen untuk mengurangi limbah.",
+        ],
+      },
+    ],
+  },
+  {
+    id: "unit-8",
+    kodeUnit: "N.82MIC00.086.3",
+    judulUnit: "Mengatur Pendaftaran Tamu dalam Suatu Acara",
+    pertanyaans: [
+      {
+        id: "u8-1",
+        dapatkahSaya: "Melakukan persiapan pendaftaran",
+        statusK: false,
+        statusBK: false,
+        bukti: "",
+        kriteriaUnjukKerja: [
+          "Seluruh database dan peralatan yang diperlukan untuk pendaftaran disiapkan.",
+          "Persiapan untuk tempat pendaftaran diperiksa sesuai acara dan sesuai dengan persetujuan.",
+          "Perincian akses dikonfirmasi sesuai acara",
+        ],
+      },
+      {
+        id: "u8-2",
+        dapatkahSaya: "Melakukan penataan tempat pendaftaran",
+        statusK: false,
+        statusBK: false,
+        bukti: "",
+        kriteriaUnjukKerja: [
+          "Tempat pendaftaran dan tata letaknya diperiksa sesuai permintaan sebelumnya.",
+          "Tempat pendaftaran diperiksa untuk keamanan dan kenyamanan tamu, anggota delegasi serta rekan sejawatnya termasuk yang ber-handicap/cacat sesuai dengan prosedur.",
+          "Tanda-tanda disiapkan sesuai persetujuan sebelumnya.",
+          "Peralatan disiapkan sebelum pelaksanaan acara.",
+          "Materi disiapkan sesuai area pendaftaran.",
+        ],
+      },
+      {
+        id: "u8-3",
+        dapatkahSaya: "Melakukan proses pendaftaran",
+        statusK: false,
+        statusBK: false,
+        bukti: "",
+        kriteriaUnjukKerja: [
+          "Tamu delegasi disambut dengan ramah sesuai dengan prosedur.",
+          "Hal-hal rinci diperiksa sesuai dengan prosedur pendaftaran yang ditetapkan.",
+          "Ketidakcocokan yang ditemukan diselesaikan dengan tidak mengganggu tamu sesuai dengan prosedur.",
+          "Ketidakhadiran harus dicatat sesuai prosedur.",
+          "Tamu diberi informasi tentang kegiatan acara serta buku program sesuai dengan ketentuan acara.",
+        ],
+      },
+    ],
+  },
+  {
+    id: "unit-9",
+    kodeUnit: "N.82MIC00.027.1",
+    judulUnit: "Mengelola Database",
+    pertanyaans: [
+      {
+        id: "u9-1",
+        dapatkahSaya: "Membuat database sederhana",
+        statusK: false,
+        statusBK: false,
+        bukti: "",
+        kriteriaUnjukKerja: [
+          "Database sederhana dirancang dengan menggunakan aplikasi database, prinsip desain dasar, fungsi perangkat lunak, dan rumus sederhana. persyaratan tugas dan organisasi.",
+          "Tabel dikembangkan dengan bidang dan atribut yang sesuai dengan penggunaan database, seperti pertimbangan data dan persyaratan pengguna.",
+          "Kunci utama untuk setiap table dibuat sesuai dengan kebutuhan.",
+          "Tata letak tabel dan atribut bidang dimodifikasi sesuai kebutuhan.",
+          "Hubungan di antara kedua table dibuat sesuai dengan kebutuhan.",
+          "Data yang dimasukkan diperiksa dan diubah sesuai dengan",
+        ],
+      },
+      {
+        id: "u9-2",
+        dapatkahSaya: "Membuat laporan dan permintaan",
+        statusK: false,
+        statusBK: false,
+        bukti: "",
+        kriteriaUnjukKerja: [
+          "Penggunaan hasil informasi, table database, dan tata letak laporan ditentukan untuk memenuhi persyaratan tugas sesuai dengan permintaan.",
+          "Pengelompokan data dan kriteria dibuat untuk memenuhi persyaratan tugas sesuai dengan permintaan.",
+          "Laporan dan permintaan diakses untuk memeriksa hasil dan rumus telah sesuai dengan data yang diperlukan.",
+          "Laporan dimodifikasi sebagai persyaratan tambahan sesuai dengan kebutuhan.",
+        ],
+      },
+      {
+        id: "u9-3",
+        dapatkahSaya: "Menggunakan database",
+        statusK: false,
+        statusBK: false,
+        bukti: "",
+        kriteriaUnjukKerja: [
+          "Database yang diakses dipastikan kesesuaiannya memenuhi tenggat waktu yang ditentukan dan persyaratan organisasi seusai dengan kebutuhan.",
+          "Permasalahan database, rancangan, dan produksi diperbaiki sesuai dengan buku pedoman, dokumentasi pengguna, dan bantuan secara daring.",
         ],
       },
     ],
   },
 ];
 
+function EditSaveControls({
+  isEditing,
+  savedSuccess,
+  onUbah,
+}: {
+  isEditing: boolean;
+  savedSuccess: boolean;
+  onUbah: () => void;
+}) {
+  return (
+    <div className="flex items-center gap-2.5 shrink-0">
+      {savedSuccess && (
+        <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#F2F5E9] text-[#5A7A22] text-xs font-semibold border border-[#8AA53C]/30 animate-in fade-in">
+          <Check size={14} className="stroke-[2.5]" />
+          Tersimpan
+        </div>
+      )}
+      <button
+        type="button"
+        onClick={onUbah}
+        disabled={isEditing}
+        className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold border transition-all cursor-pointer ${
+          isEditing
+            ? "bg-gray-100 text-gray-400 border-gray-200 cursor-default"
+            : "border-[#7E9631] text-[#7E9631] bg-white hover:bg-[#F2F5E9]"
+        }`}
+      >
+        <Pencil size={13} />
+        Ubah
+      </button>
+      <button
+        type="submit"
+        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold text-white bg-[#7E9631] hover:bg-[#6C8229] transition-all shadow-xs cursor-pointer"
+      >
+        <Save size={13} />
+        Simpan
+      </button>
+    </div>
+  );
+}
+
+function SignatureBox({
+  value,
+  onChange,
+  isEditing,
+  inputId,
+}: {
+  value: string | null;
+  onChange: (dataUrl: string | null) => void;
+  isEditing: boolean;
+  inputId: string;
+}) {
+  const handleFile = (file: File | undefined) => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => onChange(reader.result as string);
+    reader.readAsDataURL(file);
+  };
+
+  return (
+    <div
+      className={`relative w-full h-[130px] rounded-xl border border-dashed flex items-center justify-center overflow-hidden transition-all ${
+        isEditing
+          ? "border-[#7E9631]/50 bg-white"
+          : "border-gray-200 bg-gray-50"
+      }`}
+    >
+      {value ? (
+        <>
+          <img
+            src={value}
+            alt="Tanda tangan"
+            className="max-h-full max-w-full object-contain"
+          />
+          {isEditing && (
+            <button
+              type="button"
+              onClick={() => onChange(null)}
+              className="absolute top-1.5 right-1.5 p-1 rounded-full bg-white border border-gray-200 text-gray-500 hover:text-red-500 hover:border-red-200 transition-colors cursor-pointer"
+            >
+              <X size={12} />
+            </button>
+          )}
+        </>
+      ) : isEditing ? (
+        <label
+          htmlFor={inputId}
+          className="flex flex-col items-center justify-center gap-1 text-gray-400 hover:text-[#7E9631] cursor-pointer w-full h-full"
+        >
+          <Plus size={22} className="stroke-[1.5]" />
+          <input
+            id={inputId}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => handleFile(e.target.files?.[0])}
+          />
+        </label>
+      ) : (
+        <Plus size={22} className="stroke-[1.5] text-gray-300" />
+      )}
+    </div>
+  );
+}
+
 export default function APL02Page() {
+  const [judulSkema, setJudulSkema] = useState(
+    "MEETING/CONFERENCE REGISTRATION STAFF",
+  );
+  const [nomorSkema, setNomorSkema] = useState("001/LSPP306/V/2026");
   const [units, setUnits] = useState<UnitItem[]>(INITIAL_UNITS);
-  const [openUnits, setOpenUnits] = useState<Record<string, boolean>>({
-    "PAR.HT02.001.01": true,
-    "PAR.HT02.002.01": true,
-  });
+  const [isEditing, setIsEditing] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
 
-  const toggleUnit = (kode: string) => {
-    setOpenUnits((prev) => ({ ...prev, [kode]: !prev[kode] }));
-  };
+  const [rekomendasi, setRekomendasi] = useState(
+    "Asesmen dapat / tidak dapat dilanjutkan Melalui Pendekatan ................",
+  );
+  const [asesiNama, setAsesiNama] = useState("");
+  const [asesiTtd, setAsesiTtd] = useState<string | null>(null);
+  const [asesorNama, setAsesorNama] = useState("");
+  const [asesorNoReg, setAsesorNoReg] = useState("");
+  const [asesorTtd, setAsesorTtd] = useState<string | null>(null);
 
-  const handleStatusChange = (
-    unitKode: string,
-    elemenNomor: string,
-    kukId: string,
-    status: "K" | "BK"
+  const handleUbah = () => setIsEditing(true);
+
+  const updateUnitField = (
+    unitId: string,
+    field: "kodeUnit" | "judulUnit",
+    value: string,
   ) => {
     setUnits((prev) =>
-      prev.map((unit) => {
-        if (unit.kode !== unitKode) return unit;
-        return {
-          ...unit,
-          elemens: unit.elemens.map((el) => {
-            if (el.nomor !== elemenNomor) return el;
-            return {
-              ...el,
-              kuks: el.kuks.map((kuk) =>
-                kuk.id === kukId ? { ...kuk, status } : kuk
-              ),
-            };
-          }),
-        };
-      })
+      prev.map((u) => (u.id === unitId ? { ...u, [field]: value } : u)),
     );
   };
 
-  const handleBuktiChange = (
-    unitKode: string,
-    elemenNomor: string,
-    kukId: string,
-    bukti: string
+  const updatePertanyaan = (
+    unitId: string,
+    pertanyaanId: string,
+    patch: Partial<PertanyaanItem>,
   ) => {
     setUnits((prev) =>
-      prev.map((unit) => {
-        if (unit.kode !== unitKode) return unit;
+      prev.map((u) => {
+        if (u.id !== unitId) return u;
         return {
-          ...unit,
-          elemens: unit.elemens.map((el) => {
-            if (el.nomor !== elemenNomor) return el;
-            return {
-              ...el,
-              kuks: el.kuks.map((kuk) =>
-                kuk.id === kukId ? { ...kuk, bukti } : kuk
-              ),
-            };
-          }),
+          ...u,
+          pertanyaans: u.pertanyaans.map((p) =>
+            p.id === pertanyaanId ? { ...p, ...patch } : p,
+          ),
         };
-      })
+      }),
     );
   };
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setIsEditing(false);
     setSavedSuccess(true);
     setTimeout(() => setSavedSuccess(false), 3000);
   };
 
-  const handleSubmit = () => {
-    setSubmitted(true);
-  };
-
-  // Count total KUKs and Kompeten
-  const totalKUK = units.reduce(
-    (acc, u) => acc + u.elemens.reduce((elAcc, el) => elAcc + el.kuks.length, 0),
-    0
-  );
-  const totalKompeten = units.reduce(
-    (acc, u) =>
-      acc +
-      u.elemens.reduce(
-        (elAcc, el) =>
-          elAcc + el.kuks.filter((k) => k.status === "K").length,
-        0
-      ),
-    0
-  );
-
   return (
-    <div className="space-y-6">
-      {/* Header Info */}
-      <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#F2F5E9] text-[#5A7A22] mb-1">
-            FR.APL.02
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="flex justify-end">
+        <EditSaveControls
+          isEditing={isEditing}
+          savedSuccess={savedSuccess}
+          onUbah={handleUbah}
+        />
+      </div>
+
+      <div className="bg-white rounded-2xl border border-gray-100 p-6 md:p-10 shadow-xs space-y-10">
+        {/* Skema Sertifikasi */}
+        <div className="space-y-3">
+          <h3 className="text-base font-bold text-gray-800">
+            Skema Sertifikasi (KKNI/Okupasi/Klaster)
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-gray-600">
+                Judul
+              </label>
+              <input
+                type="text"
+                value={judulSkema}
+                onChange={(e) => setJudulSkema(e.target.value)}
+                disabled={!isEditing}
+                className={inputClass}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-gray-600">
+                Nomor
+              </label>
+              <input
+                type="text"
+                value={nomorSkema}
+                onChange={(e) => setNomorSkema(e.target.value)}
+                disabled={!isEditing}
+                className={inputClass}
+              />
+            </div>
           </div>
-          <h2 className="text-xl font-bold text-gray-800">
-            Formulir Asesmen Mandiri (Self Assessment)
-          </h2>
-          <p className="text-xs text-gray-500 mt-0.5">
-            Lakukan evaluasi mandiri terhadap setiap kriteria unjuk kerja (KUK) dengan memilih status K (Kompeten) atau BK (Belum Kompeten).
+        </div>
+
+        <div className="border-t border-dashed border-gray-200" />
+
+        <div className="space-y-2">
+          <p className="text-xs font-semibold text-gray-500">
+            Panduan Asesmen Mandiri
           </p>
-        </div>
-
-        {savedSuccess && (
-          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 text-xs font-medium border border-emerald-200 animate-in fade-in">
-            <CheckCircle2 size={16} />
-            Data asesmen tersimpan
-          </div>
-        )}
-      </div>
-
-      {/* Skema & Peserta Meta Card */}
-      <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-xs grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
-        <div>
-          <span className="text-gray-400 block mb-0.5">Skema Sertifikasi:</span>
-          <span className="font-bold text-gray-800">Okupasi Front Office Supervisor</span>
-        </div>
-        <div>
-          <span className="text-gray-400 block mb-0.5">Nomor Skema:</span>
-          <span className="font-mono font-semibold text-gray-700">SKM/LSPP-306/FOS/2024</span>
-        </div>
-        <div>
-          <span className="text-gray-400 block mb-0.5">Nama Asesi:</span>
-          <span className="font-bold text-gray-800">Ahmad Riyadh Smith</span>
-        </div>
-        <div>
-          <span className="text-gray-400 block mb-0.5">Progres Evaluasi:</span>
-          <span className="font-bold text-[#5A7A22]">
-            {totalKompeten} / {totalKUK} KUK Kompeten ({Math.round((totalKompeten / (totalKUK || 1)) * 100)}%)
-          </span>
-        </div>
-      </div>
-
-      {/* Petunjuk Pengisian */}
-      <div className="bg-[#FAFBF7] p-4 rounded-xl border border-[#8AA53C]/30 flex items-start gap-3 text-xs text-gray-700">
-        <Info size={18} className="text-[#8AA53C] shrink-0 mt-0.5" />
-        <div className="space-y-1">
-          <p className="font-bold text-gray-800">Panduan Asesmen Mandiri:</p>
-          <ul className="list-disc pl-4 space-y-0.5 text-gray-600">
-            <li>Baca setiap Kriteria Unjuk Kerja (KUK) dengan seksama.</li>
-            <li>Pilih <strong className="text-emerald-700 font-semibold">K (Kompeten)</strong> jika Anda yakin mampu dan memiliki bukti pendukung relevan.</li>
-            <li>Pilih <strong className="text-amber-700 font-semibold">BK (Belum Kompeten)</strong> jika Anda belum menguasai kriteria tersebut.</li>
-            <li>Tuliskan nama dokumen/bukti pendukung yang valid pada kolom Bukti Pendukung.</li>
+          <h2 className="text-2xl font-bold text-gray-800">Instruksi</h2>
+          <ul className="list-disc pl-5 space-y-1 text-sm text-gray-600">
+            {INSTRUKSI.map((teks, idx) => (
+              <li key={idx}>{teks}</li>
+            ))}
           </ul>
         </div>
-      </div>
 
-      {submitted ? (
-        <div className="bg-white p-8 rounded-xl border border-emerald-200 text-center space-y-4 shadow-sm animate-in fade-in">
-          <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto">
-            <CheckCircle2 size={36} />
+        {units.map((unit, uIdx) => (
+          <div key={unit.id}>
+            <div className="border-t border-dashed border-gray-200 mb-8" />
+            <div className="space-y-5">
+              <h3 className="text-lg font-bold text-gray-800">
+                Unit Kompetensi {uIdx + 1}
+              </h3>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-gray-600">
+                    Kode Unit
+                  </label>
+                  <input
+                    type="text"
+                    value={unit.kodeUnit}
+                    onChange={(e) =>
+                      updateUnitField(unit.id, "kodeUnit", e.target.value)
+                    }
+                    disabled={!isEditing}
+                    className={`${inputClass} font-mono`}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-gray-600">
+                    Judul Unit
+                  </label>
+                  <input
+                    type="text"
+                    value={unit.judulUnit}
+                    onChange={(e) =>
+                      updateUnitField(unit.id, "judulUnit", e.target.value)
+                    }
+                    disabled={!isEditing}
+                    className={inputClass}
+                  />
+                </div>
+              </div>
+
+              {unit.pertanyaans.map((p) => (
+                <div key={p.id} className="space-y-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold text-gray-600">
+                        Dapatkah Saya ?
+                      </label>
+                      <textarea
+                        value={p.dapatkahSaya}
+                        onChange={(e) =>
+                          updatePertanyaan(unit.id, p.id, {
+                            dapatkahSaya: e.target.value,
+                          })
+                        }
+                        disabled={!isEditing}
+                        rows={2}
+                        className={`${textareaClass} min-h-0`}
+                      />
+                      <div className="flex items-center gap-6 pt-1">
+                        <label
+                          className={`inline-flex items-center gap-2 text-sm text-gray-700 ${
+                            isEditing ? "cursor-pointer" : "cursor-default"
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={p.statusK}
+                            disabled={!isEditing}
+                            onChange={(e) =>
+                              updatePertanyaan(unit.id, p.id, {
+                                statusK: e.target.checked,
+                              })
+                            }
+                            className="w-4 h-4 rounded border-gray-300 text-[#8AA53C] focus:ring-[#8AA53C]/40 cursor-pointer disabled:cursor-default"
+                          />
+                          K
+                        </label>
+                        <label
+                          className={`inline-flex items-center gap-2 text-sm text-gray-700 ${
+                            isEditing ? "cursor-pointer" : "cursor-default"
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={p.statusBK}
+                            disabled={!isEditing}
+                            onChange={(e) =>
+                              updatePertanyaan(unit.id, p.id, {
+                                statusBK: e.target.checked,
+                              })
+                            }
+                            className="w-4 h-4 rounded border-gray-300 text-[#8AA53C] focus:ring-[#8AA53C]/40 cursor-pointer disabled:cursor-default"
+                          />
+                          BK
+                        </label>
+                      </div>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold text-gray-600">
+                        Bukti yang relevan
+                      </label>
+                      <textarea
+                        value={p.bukti}
+                        onChange={(e) =>
+                          updatePertanyaan(unit.id, p.id, {
+                            bukti: e.target.value,
+                          })
+                        }
+                        disabled={!isEditing}
+                        rows={4}
+                        className={textareaClass}
+                      />
+                    </div>
+                  </div>
+
+                  {p.kriteriaUnjukKerja.length > 0 && (
+                    <div className="text-xs text-gray-500 space-y-1">
+                      <p>Kriteria Unjuk Kerja</p>
+                      <ul className="list-disc pl-4 space-y-0.5">
+                        {p.kriteriaUnjukKerja.map((kuk, kIdx) => (
+                          <li key={kIdx}>{kuk}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
-          <div>
-            <h3 className="text-lg font-bold text-gray-800">
-              Asesmen Mandiri Berhasil Diajukan!
-            </h3>
-            <p className="text-xs text-gray-600 max-w-md mx-auto mt-1">
-              Dokumen FR.APL.02 telah tersimpan. Asesor akan meninjau evaluasi mandiri Anda sebelum tahap asesmen uji kompetensi dimulai.
-            </p>
-          </div>
-          <div className="pt-2 flex justify-center gap-3">
-            <button
-              onClick={() => window.print()}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 text-gray-700 text-xs font-semibold hover:bg-gray-50 cursor-pointer"
-            >
-              <Printer size={15} />
-              Cetak Berkas FR.APL.02
-            </button>
-            <button
-              onClick={() => setSubmitted(false)}
-              className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 text-xs font-semibold hover:bg-gray-50 cursor-pointer"
-            >
-              Edit Kembali
-            </button>
+        ))}
+
+        <div>
+          <div className="border-t border-dashed border-gray-200 mb-8" />
+          <div className="space-y-6">
+            <div className="space-y-1.5">
+              <h3 className="text-lg font-bold text-gray-800">
+                Rekomendasi Untuk Asesi:
+              </h3>
+              <textarea
+                value={rekomendasi}
+                onChange={(e) => setRekomendasi(e.target.value)}
+                disabled={!isEditing}
+                rows={3}
+                className={textareaClass}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {/* Asesi */}
+              <div className="space-y-4">
+                <h4 className="text-base font-bold text-gray-800">Asesi:</h4>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-gray-600">
+                    Nama
+                  </label>
+                  <input
+                    type="text"
+                    value={asesiNama}
+                    onChange={(e) => setAsesiNama(e.target.value)}
+                    disabled={!isEditing}
+                    className={inputClass}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-gray-600">
+                    Tanda Tangan dan Tanggal
+                  </label>
+                  <SignatureBox
+                    value={asesiTtd}
+                    onChange={setAsesiTtd}
+                    isEditing={isEditing}
+                    inputId="asesi-ttd-upload"
+                  />
+                </div>
+              </div>
+
+              {/* Ditinjau Oleh Asesor */}
+              <div className="space-y-4">
+                <h4 className="text-base font-bold text-gray-800">
+                  Ditinjau Oleh Asesor:
+                </h4>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-gray-600">
+                    Nama
+                  </label>
+                  <input
+                    type="text"
+                    value={asesorNama}
+                    onChange={(e) => setAsesorNama(e.target.value)}
+                    disabled={!isEditing}
+                    className={inputClass}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-gray-600">
+                    No. Reg
+                  </label>
+                  <input
+                    type="text"
+                    value={asesorNoReg}
+                    onChange={(e) => setAsesorNoReg(e.target.value)}
+                    disabled={!isEditing}
+                    className={inputClass}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-gray-600">
+                    Tanda Tangan dan Tanggal
+                  </label>
+                  <SignatureBox
+                    value={asesorTtd}
+                    onChange={setAsesorTtd}
+                    isEditing={isEditing}
+                    inputId="asesor-ttd-upload"
+                  />
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-      ) : (
-        <form onSubmit={handleSave} className="space-y-6">
-          {/* List of Units */}
-          {units.map((unit, uIdx) => {
-            const isOpen = !!openUnits[unit.kode];
+      </div>
 
-            return (
-              <div
-                key={unit.kode}
-                className="bg-white rounded-xl border border-gray-200 shadow-xs overflow-hidden"
-              >
-                {/* Unit Header */}
-                <div
-                  onClick={() => toggleUnit(unit.kode)}
-                  className="px-5 py-4 bg-gray-50 border-b border-gray-200 flex items-center justify-between cursor-pointer hover:bg-gray-100/70 transition-colors"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-[#F2F5E9] text-[#5A7A22] flex items-center justify-center font-bold text-xs shrink-0">
-                      U{uIdx + 1}
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-mono text-xs font-bold text-[#5A7A22]">
-                          {unit.kode}
-                        </span>
-                        <span className="text-[11px] text-gray-400">({unit.standar})</span>
-                      </div>
-                      <h3 className="text-sm font-bold text-gray-800 leading-snug">
-                        {unit.judul}
-                      </h3>
-                    </div>
-                  </div>
-
-                  <button type="button" className="text-gray-400 hover:text-gray-600 p-1">
-                    {isOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
-                  </button>
-                </div>
-
-                {/* Elements & KUK Table */}
-                {isOpen && (
-                  <div className="p-4 sm:p-5 space-y-6">
-                    {unit.elemens.map((el) => (
-                      <div key={el.nomor} className="space-y-3">
-                        <div className="flex items-center gap-2 text-xs font-bold text-gray-700 pb-1 border-b border-gray-100">
-                          <span className="px-2 py-0.5 rounded bg-gray-100 text-gray-600">
-                            Elemen {el.nomor}
-                          </span>
-                          <span>{el.judul}</span>
-                        </div>
-
-                        <div className="overflow-x-auto">
-                          <table className="w-full text-left text-xs border border-gray-200 rounded-lg overflow-hidden">
-                            <thead className="bg-gray-50 text-gray-600 font-semibold border-b border-gray-200">
-                              <tr>
-                                <th className="py-2.5 px-3 w-16 text-center">No KUK</th>
-                                <th className="py-2.5 px-3">Daftar Pertanyaan Asesmen Mandiri (KUK)</th>
-                                <th className="py-2.5 px-3 w-28 text-center">Penilaian</th>
-                                <th className="py-2.5 px-3 w-64">Bukti Pendukung Relevan</th>
-                              </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-100 text-gray-700">
-                              {el.kuks.map((kuk) => (
-                                <tr key={kuk.id} className="hover:bg-gray-50/50 transition-colors">
-                                  <td className="py-3 px-3 text-center font-mono font-semibold text-gray-500">
-                                    {kuk.nomor}
-                                  </td>
-                                  <td className="py-3 px-3 text-gray-800 leading-relaxed font-medium">
-                                    Apakah Anda dapat {kuk.pernyataan.toLowerCase()}?
-                                  </td>
-                                  <td className="py-3 px-3">
-                                    <div className="flex items-center justify-center gap-3">
-                                      <label className="flex items-center gap-1 cursor-pointer font-bold text-emerald-700">
-                                        <input
-                                          type="radio"
-                                          name={`kuk-${unit.kode}-${el.nomor}-${kuk.id}`}
-                                          checked={kuk.status === "K"}
-                                          onChange={() =>
-                                            handleStatusChange(
-                                              unit.kode,
-                                              el.nomor,
-                                              kuk.id,
-                                              "K"
-                                            )
-                                          }
-                                          className="text-emerald-600 focus:ring-emerald-500"
-                                        />
-                                        <span>K</span>
-                                      </label>
-                                      <label className="flex items-center gap-1 cursor-pointer font-bold text-amber-700">
-                                        <input
-                                          type="radio"
-                                          name={`kuk-${unit.kode}-${el.nomor}-${kuk.id}`}
-                                          checked={kuk.status === "BK"}
-                                          onChange={() =>
-                                            handleStatusChange(
-                                              unit.kode,
-                                              el.nomor,
-                                              kuk.id,
-                                              "BK"
-                                            )
-                                          }
-                                          className="text-amber-600 focus:ring-amber-500"
-                                        />
-                                        <span>BK</span>
-                                      </label>
-                                    </div>
-                                  </td>
-                                  <td className="py-3 px-3">
-                                    <input
-                                      type="text"
-                                      value={kuk.bukti}
-                                      onChange={(e) =>
-                                        handleBuktiChange(
-                                          unit.kode,
-                                          el.nomor,
-                                          kuk.id,
-                                          e.target.value
-                                        )
-                                      }
-                                      placeholder="Nama dokumen bukti..."
-                                      className="w-full px-2.5 py-1.5 text-xs rounded border border-gray-200 focus:outline-none focus:ring-1 focus:ring-[#8AA53C] focus:border-[#8AA53C]"
-                                    />
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-
-          {/* Rekomendasi Asesor Card */}
-          <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-xs space-y-3">
-            <div className="flex items-center gap-2">
-              <FileCheck2 size={18} className="text-[#8AA53C]" />
-              <h3 className="text-sm font-bold text-gray-800">
-                Rekomendasi Asesor (Untuk Diisi Oleh Asesor)
-              </h3>
-            </div>
-            <p className="text-xs text-gray-500">
-              Berdasarkan hasil asesmen mandiri di atas, pemohon direkomendasikan untuk:
-            </p>
-            <div className="flex items-center gap-6 text-xs text-gray-700">
-              <label className="flex items-center gap-2 font-medium">
-                <input
-                  type="checkbox"
-                  defaultChecked
-                  disabled
-                  className="rounded text-[#8AA53C]"
-                />
-                <span>Dapat dilanjutkan untuk mengikuti Asesmen Uji Kompetensi</span>
-              </label>
-              <label className="flex items-center gap-2 font-medium text-gray-400">
-                <input type="checkbox" disabled className="rounded" />
-                <span>Belum dapat dilanjutkan (perlu penguatan portofolio)</span>
-              </label>
-            </div>
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex items-center justify-between pt-2">
-            <button
-              type="button"
-              onClick={() => window.print()}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 text-xs font-semibold shadow-xs transition-colors cursor-pointer"
-            >
-              <Printer size={15} />
-              Cetak Dokumen FR.APL.02
-            </button>
-
-            <div className="flex items-center gap-2.5">
-              <button
-                type="submit"
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 text-xs font-semibold shadow-xs transition-colors cursor-pointer"
-              >
-                <Save size={15} />
-                Simpan Draf
-              </button>
-
-              <button
-                type="button"
-                onClick={handleSubmit}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#8AA53C] hover:bg-[#789332] text-white text-xs font-bold shadow-xs transition-all cursor-pointer"
-              >
-                <Send size={15} />
-                Ajukan Asesmen Mandiri
-              </button>
-            </div>
-          </div>
-        </form>
-      )}
-    </div>
+      <div className="flex justify-end">
+        <EditSaveControls
+          isEditing={isEditing}
+          savedSuccess={savedSuccess}
+          onUbah={handleUbah}
+        />
+      </div>
+    </form>
   );
 }
