@@ -1,7 +1,4 @@
-import {
-  Home,
-  List,
-} from "lucide-react";
+import { Home, List } from "lucide-react";
 import { NavSection } from "@/types/navigation";
 
 export const NAVIGATION_CONFIG: NavSection[] = [
@@ -69,8 +66,10 @@ export const NAVIGATION_CONFIG: NavSection[] = [
   },
 ];
 
-// Helper to check if item is currently active based on pathname
-export function isNavItemActive(href: string | undefined, pathname: string): boolean {
+export function isNavItemActive(
+  href: string | undefined,
+  pathname: string,
+): boolean {
   if (!href) return false;
   if (href === "/dashboard") {
     return pathname === "/dashboard";
@@ -78,15 +77,19 @@ export function isNavItemActive(href: string | undefined, pathname: string): boo
   if (pathname === href) {
     return true;
   }
-  // Special case for apl-01 root matching its default subroute or vice versa
-  if (href === "/dashboard/fr/apl-01" && (pathname === "/dashboard/fr/apl-01" || pathname.startsWith("/dashboard/fr/apl-01/"))) {
+  if (
+    href === "/dashboard/fr/apl-01" &&
+    (pathname === "/dashboard/fr/apl-01" ||
+      pathname.startsWith("/dashboard/fr/apl-01/"))
+  ) {
     return true;
   }
   return pathname.startsWith(href + "/");
 }
 
-// Helper to get breadcrumb data based on pathname
-export function getBreadcrumbFromPath(pathname: string): { label: string; href: string }[] {
+export function getBreadcrumbFromPath(
+  pathname: string,
+): { label: string; href: string }[] {
   const parts = pathname.split("/").filter(Boolean);
   const breadcrumbs: { label: string; href: string }[] = [];
 
@@ -106,8 +109,10 @@ export function getBreadcrumbFromPath(pathname: string): { label: string; href: 
     else if (part === "apl-02") label = "FR.APL.02";
     else if (part === "mapa-01") label = "FR.MAPA.01";
     else if (part === "mapa-02") label = "FR.MAPA.02";
-    else if (part.startsWith("ak-")) label = `FR.AK.${part.replace("ak-", "").padStart(2, "0")}`;
-    else if (part.startsWith("ia-")) label = `FR.IA.${part.replace("ia-", "").toUpperCase()}`;
+    else if (part.startsWith("ak-"))
+      label = `FR.AK.${part.replace("ak-", "").padStart(2, "0")}`;
+    else if (part.startsWith("ia-"))
+      label = `FR.IA.${part.replace("ia-", "").toUpperCase()}`;
     else if (part === "va") label = "FR.VA";
     else if (part === "rincian") label = "Rincian Data Permohonan";
     else if (part === "data-sertifikasi") label = "Data Sertifikasi";
