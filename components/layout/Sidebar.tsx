@@ -38,7 +38,8 @@ export function Sidebar({ onItemClick, className = "" }: SidebarProps) {
     "FR.APL.01": true,
   });
 
-  const [activeApl01Section, setActiveApl01Section] = useState<string>("rincian");
+  const [activeApl01Section, setActiveApl01Section] =
+    useState<string>("rincian");
 
   useEffect(() => {
     NAVIGATION_CONFIG.forEach((section) => {
@@ -46,7 +47,9 @@ export function Sidebar({ onItemClick, className = "" }: SidebarProps) {
         if (item.children && item.children.length > 0) {
           const hasActiveChild =
             pathname.startsWith(item.href || "") ||
-            item.children.some((child) => child.href.split("#")[0] === pathname);
+            item.children.some(
+              (child) => child.href.split("#")[0] === pathname,
+            );
           if (hasActiveChild) {
             setOpenGroups((prev) => ({ ...prev, [item.name]: true }));
           }
@@ -58,7 +61,6 @@ export function Sidebar({ onItemClick, className = "" }: SidebarProps) {
   useEffect(() => {
     if (pathname !== "/dashboard/fr/apl-01") return;
 
-    // Check initial hash
     if (typeof window !== "undefined" && window.location.hash) {
       const hash = window.location.hash.replace("#", "");
       if (hash) setActiveApl01Section(hash);
@@ -120,7 +122,6 @@ export function Sidebar({ onItemClick, className = "" }: SidebarProps) {
                 if (hasChildren) {
                   return (
                     <div key={item.name} className="space-y-1">
-                      {/* Main Group Header Item */}
                       <div
                         onClick={() => toggleGroup(item.name)}
                         className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm cursor-pointer transition-all ${
@@ -147,9 +148,14 @@ export function Sidebar({ onItemClick, className = "" }: SidebarProps) {
                       {isOpen && (
                         <div className="pl-6 space-y-2 py-1 my-1">
                           {item.children!.map((child: NavSubItem) => {
-                            const isApl01Child = child.href.startsWith("/dashboard/fr/apl-01#");
-                            const sectionId = isApl01Child ? child.href.split("#")[1] : "";
-                            const isApl01Page = pathname === "/dashboard/fr/apl-01";
+                            const isApl01Child = child.href.startsWith(
+                              "/dashboard/fr/apl-01#",
+                            );
+                            const sectionId = isApl01Child
+                              ? child.href.split("#")[1]
+                              : "";
+                            const isApl01Page =
+                              pathname === "/dashboard/fr/apl-01";
 
                             const childActive =
                               isApl01Child && isApl01Page
@@ -162,9 +168,16 @@ export function Sidebar({ onItemClick, className = "" }: SidebarProps) {
                                 e.preventDefault();
                                 const el = document.getElementById(sectionId);
                                 if (el) {
-                                  el.scrollIntoView({ behavior: "smooth", block: "start" });
+                                  el.scrollIntoView({
+                                    behavior: "smooth",
+                                    block: "start",
+                                  });
                                   setActiveApl01Section(sectionId);
-                                  window.history.replaceState(null, "", `#${sectionId}`);
+                                  window.history.replaceState(
+                                    null,
+                                    "",
+                                    `#${sectionId}`,
+                                  );
                                 }
                               }
                             };
