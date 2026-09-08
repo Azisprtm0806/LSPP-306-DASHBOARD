@@ -45,7 +45,7 @@ export const NAVIGATION_CONFIG: NavSection[] = [
         ],
       },
       { name: "FR.APL.02", href: "/dashboard/fr/apl-02", usePageBadge: true },
-      // { name: "FR.MAPA.01", href: "/dashboard/fr/mapa-01", usePageBadge: true },
+      { name: "FR.MAPA.01", href: "/dashboard/fr/mapa-01", usePageBadge: true },
       // { name: "FR.MAPA.02", href: "/dashboard/fr/mapa-02", usePageBadge: true },
       // { name: "FR.AK.01", href: "/dashboard/fr/ak-01", usePageBadge: true },
       // { name: "FR.AK.02", href: "/dashboard/fr/ak-02", usePageBadge: true },
